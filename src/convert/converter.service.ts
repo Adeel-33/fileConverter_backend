@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { writeFile } from 'fs/promises';
+import { writeFile,unlink } from 'fs/promises';
 import path from 'path';
 import { execFile } from 'child_process';
 import { Response } from 'express';
@@ -14,10 +14,7 @@ export class ConverterService {
       });
     }
     if (
-      file.mimetype !== 'application/pdf' &&
-      file.mimetype !==
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    ) {
+      file.mimetype !== 'application/pdf') {
       return res.status(400).json({
         message: 'file type is not supported',
       });
@@ -44,6 +41,15 @@ export class ConverterService {
   });
 });
    
-    return res.download(path.join(process.cwd(), 'temp', "output.docx"));
+    return res.download(
+       path.join(process.cwd(), 'temp', 'output.docx'),
+       'converted.docx',
+        async (error) => {
+         await unlink(path.join(process.cwd(), 'temp', 'input.pdf'));
+         await unlink(path.join(process.cwd(), 'temp', 'output.docx'));
+
+       if (error) console.error(error);
+  },
+);
   }
 }
